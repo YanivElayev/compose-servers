@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  fileSetup:
+    image: bash
+    entrypoint: ["bash", "-c", "rm /shared/counter.txt 2> /dev/null"]
+    volumes:
+      - "shared_data:/shared"
+  web:
+    image: nginx
+    entrypoint: ["/start.sh"]
+    ports:
+      - target: 80
+    volumes:
+      - "shared_data:/shared"
+      - "./start.sh:/start.sh"
+    deploy:
+      mode: replicated
+      replicas: 2
+    depends_on:
+      - fileSetup
+  lb:
+    image: nginx
+    volumes:
+      - ./lb.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web
+    ports:
+      - "4000:4000"
+volumes:
+  shared_data:
